@@ -1,12 +1,10 @@
 package hiber.dao;
 
-import hiber.model.Car;
 import hiber.model.User;
-import org.hibernate.Hibernate;
+import org.hibernate.NonUniqueResultException;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.hibernate.query.*;
 
 import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
@@ -37,8 +35,14 @@ public class UserDaoImp implements UserDao {
       query.setParameter("model", model);
       query.setParameter("series", series);
 
-      List<User> users = query.getResultList();
-      return users.isEmpty() ? null : users.get(0);
+      try {
+         return query.getSingleResult();
+      } catch (NonUniqueResultException e) {
+         throw new IllegalStateException("Запрос вернул более одного результата для " +
+                 "модели " + model + "и серии " + series, e);
+      } catch (NoResultException e) {
+         return null;
+      }
    }
 
 }
